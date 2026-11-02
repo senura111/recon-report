@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- XXE attempt: must be rejected, never resolved -->
+<!DOCTYPE nmaprun [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<nmaprun scanner="nmap" args="&xxe;" version="7.95">
+<host><status state="up"/><address addr="192.168.56.101" addrtype="ipv4"/>
+<hostnames><hostname name="&xxe;" type="user"/></hostnames>
+</host>
+</nmaprun>

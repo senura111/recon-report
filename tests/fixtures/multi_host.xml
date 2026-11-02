@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.95 scan initiated Mon Nov  2 12:00:00 2026 as: nmap -v -sV -oX lab.xml 192.168.56.101-103 -->
+<nmaprun scanner="nmap" args="nmap -v -sV -oX lab.xml 192.168.56.101-103" start="1793620800" startstr="Mon Nov  2 12:00:00 2026" version="7.95" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="1000" services="1,3-4,6-7,9,13,17,19-26"/>
+<verbose level="1"/>
+<debugging level="0"/>
+<host starttime="1793620801" endtime="1793620838"><status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.56.101" addrtype="ipv4"/>
+<address addr="08:00:27:4E:5A:11" addrtype="mac" vendor="Oracle VirtualBox virtual NIC"/>
+<hostnames>
+<hostname name="metasploitable.lab" type="PTR"/>
+</hostnames>
+<ports><extraports state="closed" count="993">
+<extrareasons reason="reset" count="993" proto="tcp" ports="1,3-4,6-7,9,13,17,19-20"/>
+</extraports>
+<extraports state="filtered" count="2">
+<extrareasons reason="no-response" count="2" proto="tcp" ports="111,2049"/>
+</extraports>
+<port protocol="tcp" portid="21"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="ftp" product="vsftpd" version="2.3.4" ostype="Unix" method="probed" conf="10"><cpe>cpe:/a:vsftpd:vsftpd:2.3.4</cpe></service></port>
+<port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="ssh" product="OpenSSH" version="4.7p1 Debian 8ubuntu1" extrainfo="protocol 2.0" ostype="Linux" method="probed" conf="10"><cpe>cpe:/a:openbsd:openssh:4.7p1</cpe><cpe>cpe:/o:linux:linux_kernel</cpe></service></port>
+<port protocol="tcp" portid="23"><state state="closed" reason="reset" reason_ttl="64"/><service name="telnet" method="table" conf="3"/></port>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="http" product="Apache httpd" version="2.2.8" extrainfo="(Ubuntu) DAV/2" method="probed" conf="10"><cpe>cpe:/a:apache:http_server:2.2.8</cpe></service></port>
+<port protocol="tcp" portid="3306"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="mysql" method="table" conf="3"/></port>
+</ports>
+<times srtt="412" rttvar="210" to="100000"/>
+</host>
+<host starttime="1793620801" endtime="1793620842"><status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.56.102" addrtype="ipv4"/>
+<address addr="08:00:27:9C:01:2B" addrtype="mac" vendor="Oracle VirtualBox virtual NIC"/>
+<hostnames>
+</hostnames>
+<ports><extraports state="filtered" count="997">
+<extrareasons reason="no-response" count="997" proto="tcp" ports="1,3-4,6-7,9,13,17,19-26"/>
+</extraports>
+<port protocol="tcp" portid="135"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="msrpc" product="Microsoft Windows RPC" ostype="Windows" method="probed" conf="10"><cpe>cpe:/o:microsoft:windows</cpe></service></port>
+<port protocol="tcp" portid="139"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="netbios-ssn" product="Microsoft Windows netbios-ssn" ostype="Windows" method="probed" conf="10"><cpe>cpe:/o:microsoft:windows</cpe></service></port>
+<port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="microsoft-ds" method="table" conf="3"/></port>
+</ports>
+<times srtt="530" rttvar="301" to="100000"/>
+</host>
+<host><status state="down" reason="no-response" reason_ttl="0"/>
+<address addr="192.168.56.103" addrtype="ipv4"/>
+</host>
+<runstats><finished time="1793620842" timestr="Mon Nov  2 12:00:42 2026" summary="Nmap done at Mon Nov  2 12:00:42 2026; 3 IP addresses (2 hosts up) scanned in 42.17 seconds" elapsed="42.17" exit="success"/><hosts up="2" down="1" total="3"/>
+</runstats>
+</nmaprun>
