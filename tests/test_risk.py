@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -84,7 +84,10 @@ def test_every_rule_has_rationale_recommendation_and_https_references(
 @pytest.mark.parametrize("rule", VERSION_RULES, ids=lambda rule: rule.rule_id)
 def test_every_version_rule_has_review_date(rule: VersionRule) -> None:
     assert isinstance(rule.last_reviewed, date)
-    assert rule.last_reviewed <= date.today()
+    # Compare with the UTC date, not the machine's local date: CI runners use UTC, and a
+    # rule reviewed in a time zone ahead of UTC can carry a date one day past UTC's today.
+    latest_allowed = datetime.now(timezone.utc).date() + timedelta(days=1)
+    assert rule.last_reviewed <= latest_allowed
 
 
 def test_service_rule_requires_a_matcher() -> None:
