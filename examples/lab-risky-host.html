@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;sha256-DXP6MhevRDz8Dhf+iFIzrWgMi08FsVygZ7uxfeqR2tk=&#39;; base-uri &#39;none&#39;; form-action &#39;none&#39;">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="generator" content="recon-report 0.1.0">
+<title>Reconnaissance report: 3 hosts</title>
+<style>/* recon-report HTML report. Inlined into the page and allowed by its CSP hash.
+   No external fonts, images or imports: the report must stay self-contained.
+   Severity colours meet WCAG AA contrast (4.5:1) against their badge text. */
+:root {
+  color-scheme: light;
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --text: #1f2933;
+  --muted: #52606d;
+  --border: #d9dee4;
+  --subtle: #eef1f4;
+  --accent: #1f3a5f;
+  --note-bg: #eaf2fb;
+  --note-border: #3d6ea8;
+  --warn-bg: #fff8e1;
+  --warn-border: #c99400;
+  --warn-text: #5c4400;
+  --on-sev: #ffffff;
+  --sev-critical: #6a1b9a;
+  --sev-high: #c62828;
+  --sev-medium: #8f6200;
+  --sev-low: #1d4ed8;
+  --sev-info: #4b5563;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0f1419;
+    --surface: #18202a;
+    --text: #e6e9ed;
+    --muted: #a3adb8;
+    --border: #2e3a46;
+    --subtle: #1f2934;
+    --accent: #9cc3f0;
+    --note-bg: #16283d;
+    --note-border: #6f9fd8;
+    --warn-bg: #2a2410;
+    --warn-border: #c99400;
+    --warn-text: #ffe08a;
+    --on-sev: #111418;
+    --sev-critical: #d6a3f5;
+    --sev-high: #ff8a80;
+    --sev-medium: #ffb74d;
+    --sev-low: #8ab4f8;
+    --sev-info: #b8c1cc;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.6 var(--sans);
+}
+
+.report {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 40px 32px 24px;
+}
+
+h1, h2, h3, h4 { line-height: 1.25; margin: 0; }
+h1 { font-size: 1.9rem; overflow-wrap: anywhere; }
+h2 {
+  font-size: 1.35rem;
+  color: var(--accent);
+  padding-bottom: 8px;
+  margin: 40px 0 16px;
+  border-bottom: 2px solid var(--border);
+}
+h3 { font-size: 1.1rem; margin: 24px 0 10px; overflow-wrap: anywhere; }
+h4 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 16px 0 4px;
+}
+p { margin: 0 0 12px; }
+a { color: var(--accent); overflow-wrap: anywhere; }
+code, .mono { font-family: var(--mono); font-size: 0.92em; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Header ------------------------------------------------------------------ */
+.report-header {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 6px solid var(--accent);
+  border-radius: 8px;
+  padding: 28px 32px;
+}
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px 32px;
+  margin: 24px 0 0;
+}
+.meta div { min-width: 0; }
+.meta .wide { grid-column: 1 / -1; }
+.meta dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.meta dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.plain { list-style: none; margin: 0; padding: 0; }
+
+.notice {
+  margin: 20px 0 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--note-border);
+  background: var(--note-bg);
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+.notice-auth {
+  border-left-color: var(--warn-border);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+/* Severity ---------------------------------------------------------------- */
+.sev-critical { --sev: var(--sev-critical); }
+.sev-high { --sev: var(--sev-high); }
+.sev-medium { --sev: var(--sev-medium); }
+.sev-low { --sev: var(--sev-low); }
+.sev-info { --sev: var(--sev-info); }
+
+.counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+}
+.count-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 6px solid var(--sev);
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+.count {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.count-label { font-weight: 600; color: var(--muted); }
+.count-card.is-zero .count { color: var(--muted); font-weight: 400; }
+
+.badge {
+  display: inline-block;
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--sev);
+  color: var(--on-sev);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.summary {
+  font-size: 1.05rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  overflow-wrap: anywhere;
+}
+
+/* Hosts ------------------------------------------------------------------- */
+.host {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 20px 12px;
+  margin: 0 0 16px;
+}
+.hostnames { color: var(--muted); font-weight: 400; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: break-word;
+}
+td.version { overflow-wrap: anywhere; }
+th {
+  background: var(--subtle);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+td.nowrap { white-space: nowrap; overflow-wrap: normal; }
+.not-shown, .empty { color: var(--muted); margin: 10px 0 0; }
+
+/* Findings ---------------------------------------------------------------- */
+.finding {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 6px solid var(--sev);
+  border-radius: 6px;
+  padding: 16px 22px 10px;
+  margin: 0 0 18px;
+}
+.finding-head { display: flex; align-items: center; gap: 12px; }
+.finding-head h3 { margin: 0; }
+.finding-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px 24px;
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  background: var(--subtle);
+  border-radius: 4px;
+}
+.finding-meta div { min-width: 0; }
+.finding-meta dt {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.finding-meta dd { margin: 0; overflow-wrap: anywhere; }
+.evidence {
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--subtle);
+  border-radius: 4px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.references { margin: 0; padding-left: 20px; }
+
+/* Methodology and footer -------------------------------------------------- */
+.methodology ul { padding-left: 20px; }
+.methodology li { margin-bottom: 6px; }
+
+.report-footer {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px 32px 40px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 600px) {
+  .report { padding: 20px 14px; }
+  .report-header { padding: 20px; }
+  .host { padding: 4px 10px 10px; }
+  th, td { padding: 6px 5px; }
+  .finding { padding: 14px 16px 8px; }
+  .report-footer { padding: 16px 14px 32px; }
+}
+
+/* Print: light colours, no page-split cards, so "Save as PDF" gives a clean report. */
+@page { margin: 16mm 14mm; }
+
+@media print {
+  body { background: #ffffff; font-size: 10.5pt; }
+  .report { max-width: none; padding: 0; }
+  .report-header, .host, .finding, .summary, .count-card {
+    border-color: #c4cbd3;
+    break-inside: avoid;
+  }
+  h2, h3, h4 { break-after: avoid; }
+  tr { break-inside: avoid; }
+  .badge, .count-card, .finding, .notice {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  a { color: inherit; text-decoration: none; }
+  .report-footer { max-width: none; padding: 12px 0 0; }
+}
+</style>
+</head>
+<body>
+<main class="report">
+
+<header class="report-header">
+<p class="eyebrow">Network reconnaissance report</p>
+<h1>3 hosts</h1>
+<p class="notice" role="note"><strong>Note:</strong> Fictional lab data. This example was generated from a synthetic Nmap scan: the hosts, addresses and services do not exist and were made up to demonstrate the risk rules.</p>
+<dl class="meta">
+<div class="wide"><dt>Targets</dt><dd>
+<ul class="plain">
+<li class="mono">10.0.0.20 (lab-app.internal)</li>
+<li class="mono">10.0.0.3</li>
+<li class="mono">10.0.0.100</li>
+</ul>
+</dd></div>
+<div><dt>Scan started</dt><dd>2026-11-02 12:00:00 UTC</dd></div>
+<div><dt>Scan finished</dt><dd>2026-11-02 12:01:00 UTC</dd></div>
+<div><dt>Duration</dt><dd>1m 0s</dd></div>
+<div><dt>Nmap version</dt><dd>7.95</dd></div>
+<div class="wide"><dt>Nmap command</dt><dd><code>nmap -sV -oX risky_host.xml 10.0.0.0/24</code></dd></div>
+<div><dt>recon-report version</dt><dd>0.1.0</dd></div>
+<div><dt>Report generated</dt><dd>2026-11-02 12:01:00 UTC</dd></div>
+</dl>
+<p class="notice notice-auth" role="note"><strong>Authorized testing only.</strong> recon-report is intended for authorized security testing. Scan only systems you own or have explicit written permission to test. This report describes the exposure of the scanned systems: handle it as confidential.</p>
+</header>
+
+<section id="summary" aria-labelledby="summary-title">
+<h2 id="summary-title">1. Executive summary</h2>
+<ul class="counts">
+<li class="count-card sev-critical"><span class="count">1</span> <span class="count-label">Critical</span></li>
+<li class="count-card sev-high"><span class="count">6</span> <span class="count-label">High</span></li>
+<li class="count-card sev-medium"><span class="count">2</span> <span class="count-label">Medium</span></li>
+<li class="count-card sev-low"><span class="count">1</span> <span class="count-label">Low</span></li>
+<li class="count-card sev-info is-zero"><span class="count">0</span> <span class="count-label">Info</span></li>
+</ul>
+<p class="summary">2 of 3 hosts were up, with 10 open ports. 10 findings were identified (1 Critical, 6 High, 2 Medium and 1 Low). The most severe finding is Docker Engine API exposed without TLS (Critical) on 10.0.0.20 (lab-app.internal), port 2375/tcp.</p>
+</section>
+
+<section id="hosts" aria-labelledby="hosts-title">
+<h2 id="hosts-title">2. Hosts and open ports</h2>
+<article class="host">
+<h3><span class="mono">10.0.0.20</span> <span class="hostnames">lab-app.internal</span></h3>
+<div class="table-wrap">
+<table>
+<caption class="visually-hidden">Open ports on 10.0.0.20 (lab-app.internal)</caption>
+<thead><tr><th scope="col">Port</th><th scope="col">Service</th><th scope="col">Version</th><th scope="col">Detection</th></tr></thead>
+<tbody>
+<tr><td class="mono nowrap">23/tcp</td><td>telnet</td><td class="mono version">Linux telnetd</td><td>Probed</td></tr>
+<tr><td class="mono nowrap">443/tcp</td><td>ssl/http</td><td class="mono version">nginx 1.24.0</td><td>Probed</td></tr>
+<tr><td class="mono nowrap">2375/tcp</td><td>docker</td><td class="mono version">Docker 24.0.7</td><td>Probed</td></tr>
+<tr><td class="mono nowrap">3306/tcp</td><td>mysql</td><td class="mono version">MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1</td><td>Probed</td></tr>
+<tr><td class="mono nowrap">3389/tcp</td><td>ms-wbt-server</td><td class="mono version">—</td><td>Port number only</td></tr>
+<tr><td class="mono nowrap">5432/tcp</td><td>postgresql</td><td class="mono version">PostgreSQL DB 9.6.0 - 9.6.4</td><td>Probed</td></tr>
+<tr><td class="mono nowrap">6379/tcp</td><td>redis</td><td class="mono version">Redis key-value store 7.2.4</td><td>Probed</td></tr>
+<tr><td class="mono nowrap">8080/tcp</td><td>http</td><td class="mono version">Apache httpd 2.4.49 ((Unix))</td><td>Probed</td></tr>
+<tr><td class="mono nowrap">9200/tcp</td><td>http</td><td class="mono version">Elasticsearch REST API 7.17.0 (name: es01; cluster: lab)</td><td>Probed</td></tr>
+</tbody>
+</table>
+</div>
+<p class="not-shown">Not shown: 1 closed port.</p>
+</article>
+<article class="host">
+<h3><span class="mono">10.0.0.3</span></h3>
+<div class="table-wrap">
+<table>
+<caption class="visually-hidden">Open ports on 10.0.0.3</caption>
+<thead><tr><th scope="col">Port</th><th scope="col">Service</th><th scope="col">Version</th><th scope="col">Detection</th></tr></thead>
+<tbody>
+<tr><td class="mono nowrap">5900/tcp</td><td>vnc</td><td class="mono version">VNC (protocol 3.8)</td><td>Probed</td></tr>
+</tbody>
+</table>
+</div>
+</article>
+<h3>Hosts not up</h3>
+<ul>
+<li><span class="mono">10.0.0.100</span>: down</li>
+</ul>
+</section>
+
+<section id="findings" aria-labelledby="findings-title">
+<h2 id="findings-title">3. Findings</h2>
+<p>Findings are sorted by severity, most severe first.</p>
+<article class="finding sev-critical" id="finding-1">
+<div class="finding-head">
+<span class="badge">Critical</span>
+<h3>1. Docker Engine API exposed without TLS</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">10.0.0.20</span> (lab-app.internal)</dd></div>
+<div><dt>Port</dt><dd class="mono">2375/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Confirmed: nmap identified the service by probing it</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-API-DOCKER</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>docker: Docker 24.0.7</code></pre>
+<h4>Description</h4>
+<p>The Docker daemon API is reachable over plain TCP. The API has no authentication of its own, and anyone who can reach it can start privileged containers, which is equivalent to root access on the host.</p>
+<h4>Recommendation</h4>
+<p>Stop exposing the daemon over TCP: use the local Unix socket, or SSH. If remote TCP access is required, use TLS with client certificate verification (--tlsverify) and restrict the port to trusted hosts.</p>
+<h4>References</h4>
+<ul class="references">
+<li><a href="https://docs.docker.com/engine/security/protect-access/" rel="noopener noreferrer">https://docs.docker.com/engine/security/protect-access/</a></li>
+</ul>
+</article>
+<article class="finding sev-high" id="finding-2">
+<div class="finding-head">
+<span class="badge">High</span>
+<h3>2. VNC remote desktop exposed</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">10.0.0.3</span></dd></div>
+<div><dt>Port</dt><dd class="mono">5900/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Confirmed: nmap identified the service by probing it</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-REMOTE-VNC</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>vnc: VNC (protocol 3.8)</code></pre>
+<h4>Description</h4>
+<p>VNC often relies on a single shared password, and classic VNC authentication uses only the first 8 characters of it. Many deployments send the session unencrypted, and some allow access with no password at all.</p>
+<h4>Recommendation</h4>
+<p>Do not expose VNC directly. Tunnel it over SSH or a VPN, require strong authentication, and prefer a VNC server that supports encryption. If remote access is required, allow it only from trusted management networks through a firewall or VPN rather than exposing it broadly.</p>
+</article>
+<article class="finding sev-high" id="finding-3">
+<div class="finding-head">
+<span class="badge">High</span>
+<h3>3. Telnet service exposed</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">10.0.0.20</span> (lab-app.internal)</dd></div>
+<div><dt>Port</dt><dd class="mono">23/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Confirmed: nmap identified the service by probing it</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-CLEARTEXT-TELNET</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>telnet: Linux telnetd</code></pre>
+<h4>Description</h4>
+<p>Telnet sends everything, including usernames and passwords, in cleartext, so anyone on the network path can capture credentials or hijack sessions.</p>
+<h4>Recommendation</h4>
+<p>Disable Telnet and use SSH for remote administration. For devices that only support Telnet, restrict access to an isolated management network.</p>
+</article>
+<article class="finding sev-high" id="finding-4">
+<div class="finding-head">
+<span class="badge">High</span>
+<h3>4. Remote Desktop (RDP) exposed</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">10.0.0.20</span> (lab-app.internal)</dd></div>
+<div><dt>Port</dt><dd class="mono">3389/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Likely: nmap guessed the service from the port number only</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-REMOTE-RDP</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>ms-wbt-server</code></pre>
+<h4>Description</h4>
+<p>Exposed RDP is a frequent target for password guessing and credential stuffing and a common initial access route for ransomware. Any unpatched RDP vulnerability is directly reachable.</p>
+<h4>Recommendation</h4>
+<p>Do not expose RDP broadly. Put it behind a VPN or Remote Desktop Gateway, require Network Level Authentication and multi-factor authentication, and enforce account lockout. If remote access is required, allow it only from trusted management networks through a firewall or VPN rather than exposing it broadly.</p>
+</article>
+<article class="finding sev-high" id="finding-5">
+<div class="finding-head">
+<span class="badge">High</span>
+<h3>5. Redis exposed</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">10.0.0.20</span> (lab-app.internal)</dd></div>
+<div><dt>Port</dt><dd class="mono">6379/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Confirmed: nmap identified the service by probing it</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-DB-REDIS</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>redis: Redis key-value store 7.2.4</code></pre>
+<h4>Description</h4>
+<p>Redis is designed to be accessed only by trusted clients in trusted environments. An exposed instance without authentication lets anyone read or modify data and may be abused to write files or execute code on the host.</p>
+<h4>Recommendation</h4>
+<p>Bind Redis to localhost or an internal interface, keep protected mode enabled, require authentication with ACLs, and allow only application hosts through the firewall.</p>
+<h4>References</h4>
+<ul class="references">
+<li><a href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/" rel="noopener noreferrer">https://redis.io/docs/latest/operate/oss_and_stack/management/security/</a></li>
+</ul>
+</article>
+<article class="finding sev-high" id="finding-6">
+<div class="finding-head">
+<span class="badge">High</span>
+<h3>6. Apache httpd version with known path traversal vulnerability</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">10.0.0.20</span> (lab-app.internal)</dd></div>
+<div><dt>Port</dt><dd class="mono">8080/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Potential: based on the banner version, which may not reflect patch status</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-VER-APACHE-PATH-TRAVERSAL</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>http: Apache httpd 2.4.49 ((Unix))</code></pre>
+<h4>Description</h4>
+<p>The banner reports Apache httpd 2.4.49 or 2.4.50. 2.4.49 is affected by CVE-2021-41773, and both versions by CVE-2021-42013 (an incomplete fix for the first). Depending on configuration, these allow reading files outside the document root and, with CGI enabled, remote code execution. The Apache project reports CVE-2021-41773 was exploited in the wild. Linux distributions often backport security fixes without changing the upstream version number, so the banner version may not reflect the actual patch status. Verify against the vendor&#39;s package version before acting.</p>
+<h4>Recommendation</h4>
+<p>Upgrade to Apache httpd 2.4.51 or later; a current 2.4 release is best.</p>
+<h4>References</h4>
+<ul class="references">
+<li><a href="https://httpd.apache.org/security/vulnerabilities_24.html" rel="noopener noreferrer">https://httpd.apache.org/security/vulnerabilities_24.html</a></li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2021-41773" rel="noopener noreferrer">https://nvd.nist.gov/vuln/detail/CVE-2021-41773</a></li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2021-42013" rel="noopener noreferrer">https://nvd.nist.gov/vuln/detail/CVE-2021-42013</a></li>
+</ul>
+</article>
+<article class="finding sev-high" id="finding-7">
+<div class="finding-head">
+<span class="badge">High</span>
+<h3>7. Elasticsearch API exposed</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">10.0.0.20</span> (lab-app.internal)</dd></div>
+<div><dt>Port</dt><dd class="mono">9200/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Confirmed: nmap identified the service by probing it</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-DB-ELASTICSEARCH</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>http: Elasticsearch REST API 7.17.0 (name: es01; cluster: lab)</code></pre>
+<h4>Description</h4>
+<p>The Elasticsearch REST API is reachable over the network. Versions before 8.0 did not enable security by default, and exposed clusters without authentication have caused large data leaks.</p>
+<h4>Recommendation</h4>
+<p>Enable Elasticsearch security (authentication and TLS), bind to internal interfaces only, and put the API behind a firewall or authenticated proxy.</p>
+<h4>References</h4>
+<ul class="references">
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/security-minimal-setup.html" rel="noopener noreferrer">https://www.elastic.co/guide/en/elasticsearch/reference/current/security-minimal-setup.html</a></li>
+</ul>
+</article>
+<article class="finding sev-medium" id="finding-8">
+<div class="finding-head">
+<span class="badge">Medium</span>
+<h3>8. MySQL / MariaDB database exposed</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">10.0.0.20</span> (lab-app.internal)</dd></div>
+<div><dt>Port</dt><dd class="mono">3306/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Confirmed: nmap identified the service by probing it</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-DB-MYSQL</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>mysql: MySQL 5.5.5-10.6.12-MariaDB-0ubuntu0.22.04.1</code></pre>
+<h4>Description</h4>
+<p>The database port is reachable over the network, which allows password guessing against database accounts and direct exposure to any server vulnerability.</p>
+<h4>Recommendation</h4>
+<p>Bind the server to localhost or an internal interface (bind_address), allow only application hosts through the firewall, and require strong, per-application credentials and TLS.</p>
+<h4>References</h4>
+<ul class="references">
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/security-guidelines.html" rel="noopener noreferrer">https://dev.mysql.com/doc/refman/8.4/en/security-guidelines.html</a></li>
+</ul>
+</article>
+<article class="finding sev-medium" id="finding-9">
+<div class="finding-head">
+<span class="badge">Medium</span>
+<h3>9. PostgreSQL database exposed</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">10.0.0.20</span> (lab-app.internal)</dd></div>
+<div><dt>Port</dt><dd class="mono">5432/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Confirmed: nmap identified the service by probing it</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-DB-POSTGRESQL</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>postgresql: PostgreSQL DB 9.6.0 - 9.6.4</code></pre>
+<h4>Description</h4>
+<p>The database port is reachable over the network, which allows password guessing against database roles and direct exposure to any server vulnerability. Misconfigured pg_hba.conf entries (e.g. trust) can allow access without a password.</p>
+<h4>Recommendation</h4>
+<p>Restrict listen_addresses to required interfaces, limit pg_hba.conf entries to specific application hosts using scram-sha-256 authentication, require TLS (hostssl), and filter the port at the firewall.</p>
+<h4>References</h4>
+<ul class="references">
+<li><a href="https://www.postgresql.org/docs/current/auth-pg-hba-conf.html" rel="noopener noreferrer">https://www.postgresql.org/docs/current/auth-pg-hba-conf.html</a></li>
+</ul>
+</article>
+<article class="finding sev-low" id="finding-10">
+<div class="finding-head">
+<span class="badge">Low</span>
+<h3>10. Unencrypted HTTP service</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">10.0.0.20</span> (lab-app.internal)</dd></div>
+<div><dt>Port</dt><dd class="mono">8080/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Confirmed: nmap identified the service by probing it</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-CLEARTEXT-HTTP</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>http: Apache httpd 2.4.49 ((Unix))</code></pre>
+<h4>Description</h4>
+<p>The service is served over plain HTTP, so traffic, including any credentials or session cookies, can be read or modified in transit. This is expected if the port only redirects to HTTPS.</p>
+<h4>Recommendation</h4>
+<p>Serve the site over HTTPS, redirect HTTP to HTTPS, and enable HTTP Strict Transport Security (HSTS) once HTTPS is in place.</p>
+</article>
+</section>
+
+<section id="methodology" class="methodology" aria-labelledby="methodology-title">
+<h2 id="methodology-title">4. Methodology and limitations</h2>
+<h3>How the scan was run</h3>
+<p>Hosts and services were discovered with Nmap using the command shown in the report header. Nmap service version detection (-sV) probed each open port and identified the product and version from the service&#39;s responses.</p>
+<p>Each open port on each host that was up was then assessed against recon-report's built-in rules: 15 service exposure rules (cleartext protocols, remote administration, databases and management APIs) and 7 version rules (outdated, end-of-life or known-vulnerable releases). No exploitation, authentication attempts or vulnerability probing were performed.</p>
+<h3>Confidence levels</h3>
+<ul>
+<li><strong>Confirmed:</strong> nmap identified the service by probing it.</li>
+<li><strong>Likely:</strong> nmap guessed the service from the port number only.</li>
+<li><strong>Potential:</strong> based on the banner version, which may not reflect patch status.</li>
+</ul>
+<h3>Limitations</h3>
+<ul>
+<li>Version findings are based only on the version reported in the service banner. Linux distributions often backport security fixes without changing the upstream version number, so the banner version may not reflect the actual patch status. Verify against the vendor&#39;s package version before acting.</li>
+<li>Version rule thresholds were last reviewed against official vendor lifecycle and advisory pages on 2026-11-03. Releases and end-of-life dates after that are not reflected.</li>
+<li>The scan shows only what was reachable from the scanning host at the time of the scan. Filtered ports, ports and protocols that were not scanned, and changes made after the scan are not covered.</li>
+<li>Findings indicate exposure and likely risk, not confirmed vulnerabilities. The absence of findings does not mean a host is secure.</li>
+</ul>
+</section>
+
+</main>
+<footer class="report-footer">
+<p>Generated by recon-report 0.1.0 on 2026-11-02 12:01:00 UTC.</p>
+</footer>
+</body>
+</html>

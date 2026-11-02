@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;sha256-DXP6MhevRDz8Dhf+iFIzrWgMi08FsVygZ7uxfeqR2tk=&#39;; base-uri &#39;none&#39;; form-action &#39;none&#39;">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="generator" content="recon-report 0.1.0">
+<title>Reconnaissance report: 45.33.32.156 (scanme.nmap.org)</title>
+<style>/* recon-report HTML report. Inlined into the page and allowed by its CSP hash.
+   No external fonts, images or imports: the report must stay self-contained.
+   Severity colours meet WCAG AA contrast (4.5:1) against their badge text. */
+:root {
+  color-scheme: light;
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --text: #1f2933;
+  --muted: #52606d;
+  --border: #d9dee4;
+  --subtle: #eef1f4;
+  --accent: #1f3a5f;
+  --note-bg: #eaf2fb;
+  --note-border: #3d6ea8;
+  --warn-bg: #fff8e1;
+  --warn-border: #c99400;
+  --warn-text: #5c4400;
+  --on-sev: #ffffff;
+  --sev-critical: #6a1b9a;
+  --sev-high: #c62828;
+  --sev-medium: #8f6200;
+  --sev-low: #1d4ed8;
+  --sev-info: #4b5563;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0f1419;
+    --surface: #18202a;
+    --text: #e6e9ed;
+    --muted: #a3adb8;
+    --border: #2e3a46;
+    --subtle: #1f2934;
+    --accent: #9cc3f0;
+    --note-bg: #16283d;
+    --note-border: #6f9fd8;
+    --warn-bg: #2a2410;
+    --warn-border: #c99400;
+    --warn-text: #ffe08a;
+    --on-sev: #111418;
+    --sev-critical: #d6a3f5;
+    --sev-high: #ff8a80;
+    --sev-medium: #ffb74d;
+    --sev-low: #8ab4f8;
+    --sev-info: #b8c1cc;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.6 var(--sans);
+}
+
+.report {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 40px 32px 24px;
+}
+
+h1, h2, h3, h4 { line-height: 1.25; margin: 0; }
+h1 { font-size: 1.9rem; overflow-wrap: anywhere; }
+h2 {
+  font-size: 1.35rem;
+  color: var(--accent);
+  padding-bottom: 8px;
+  margin: 40px 0 16px;
+  border-bottom: 2px solid var(--border);
+}
+h3 { font-size: 1.1rem; margin: 24px 0 10px; overflow-wrap: anywhere; }
+h4 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 16px 0 4px;
+}
+p { margin: 0 0 12px; }
+a { color: var(--accent); overflow-wrap: anywhere; }
+code, .mono { font-family: var(--mono); font-size: 0.92em; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Header ------------------------------------------------------------------ */
+.report-header {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 6px solid var(--accent);
+  border-radius: 8px;
+  padding: 28px 32px;
+}
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px 32px;
+  margin: 24px 0 0;
+}
+.meta div { min-width: 0; }
+.meta .wide { grid-column: 1 / -1; }
+.meta dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.meta dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.plain { list-style: none; margin: 0; padding: 0; }
+
+.notice {
+  margin: 20px 0 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--note-border);
+  background: var(--note-bg);
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+.notice-auth {
+  border-left-color: var(--warn-border);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+/* Severity ---------------------------------------------------------------- */
+.sev-critical { --sev: var(--sev-critical); }
+.sev-high { --sev: var(--sev-high); }
+.sev-medium { --sev: var(--sev-medium); }
+.sev-low { --sev: var(--sev-low); }
+.sev-info { --sev: var(--sev-info); }
+
+.counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+}
+.count-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 6px solid var(--sev);
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+.count {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.count-label { font-weight: 600; color: var(--muted); }
+.count-card.is-zero .count { color: var(--muted); font-weight: 400; }
+
+.badge {
+  display: inline-block;
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--sev);
+  color: var(--on-sev);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.summary {
+  font-size: 1.05rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  overflow-wrap: anywhere;
+}
+
+/* Hosts ------------------------------------------------------------------- */
+.host {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 20px 12px;
+  margin: 0 0 16px;
+}
+.hostnames { color: var(--muted); font-weight: 400; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: break-word;
+}
+td.version { overflow-wrap: anywhere; }
+th {
+  background: var(--subtle);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+td.nowrap { white-space: nowrap; overflow-wrap: normal; }
+.not-shown, .empty { color: var(--muted); margin: 10px 0 0; }
+
+/* Findings ---------------------------------------------------------------- */
+.finding {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 6px solid var(--sev);
+  border-radius: 6px;
+  padding: 16px 22px 10px;
+  margin: 0 0 18px;
+}
+.finding-head { display: flex; align-items: center; gap: 12px; }
+.finding-head h3 { margin: 0; }
+.finding-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px 24px;
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  background: var(--subtle);
+  border-radius: 4px;
+}
+.finding-meta div { min-width: 0; }
+.finding-meta dt {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.finding-meta dd { margin: 0; overflow-wrap: anywhere; }
+.evidence {
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--subtle);
+  border-radius: 4px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.references { margin: 0; padding-left: 20px; }
+
+/* Methodology and footer -------------------------------------------------- */
+.methodology ul { padding-left: 20px; }
+.methodology li { margin-bottom: 6px; }
+
+.report-footer {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px 32px 40px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 600px) {
+  .report { padding: 20px 14px; }
+  .report-header { padding: 20px; }
+  .host { padding: 4px 10px 10px; }
+  th, td { padding: 6px 5px; }
+  .finding { padding: 14px 16px 8px; }
+  .report-footer { padding: 16px 14px 32px; }
+}
+
+/* Print: light colours, no page-split cards, so "Save as PDF" gives a clean report. */
+@page { margin: 16mm 14mm; }
+
+@media print {
+  body { background: #ffffff; font-size: 10.5pt; }
+  .report { max-width: none; padding: 0; }
+  .report-header, .host, .finding, .summary, .count-card {
+    border-color: #c4cbd3;
+    break-inside: avoid;
+  }
+  h2, h3, h4 { break-after: avoid; }
+  tr { break-inside: avoid; }
+  .badge, .count-card, .finding, .notice {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  a { color: inherit; text-decoration: none; }
+  .report-footer { max-width: none; padding: 12px 0 0; }
+}
+</style>
+</head>
+<body>
+<main class="report">
+
+<header class="report-header">
+<p class="eyebrow">Network reconnaissance report</p>
+<h1>45.33.32.156 (scanme.nmap.org)</h1>
+<p class="notice" role="note"><strong>Note:</strong> Example report from a real scan of scanme.nmap.org, a host the Nmap Project provides for authorized test scanning.</p>
+<dl class="meta">
+<div class="wide"><dt>Targets</dt><dd>
+<ul class="plain">
+<li class="mono">45.33.32.156 (scanme.nmap.org)</li>
+</ul>
+</dd></div>
+<div><dt>Scan started</dt><dd>2026-11-02 18:09:13 UTC</dd></div>
+<div><dt>Scan finished</dt><dd>2026-11-02 18:09:24 UTC</dd></div>
+<div><dt>Duration</dt><dd>11s</dd></div>
+<div><dt>Nmap version</dt><dd>7.993</dd></div>
+<div class="wide"><dt>Nmap command</dt><dd><code>&#34;C:\\Program Files (x86)\\Nmap\\nmap.EXE&#34; -sV -oX scans\\scan_scanme.nmap.org_20261102T180912Z.xml -p 22,80 scanme.nmap.org</code></dd></div>
+<div><dt>recon-report version</dt><dd>0.1.0</dd></div>
+<div><dt>Report generated</dt><dd>2026-11-02 18:09:24 UTC</dd></div>
+</dl>
+<p class="notice notice-auth" role="note"><strong>Authorized testing only.</strong> recon-report is intended for authorized security testing. Scan only systems you own or have explicit written permission to test. This report describes the exposure of the scanned systems: handle it as confidential.</p>
+</header>
+
+<section id="summary" aria-labelledby="summary-title">
+<h2 id="summary-title">1. Executive summary</h2>
+<ul class="counts">
+<li class="count-card sev-critical is-zero"><span class="count">0</span> <span class="count-label">Critical</span></li>
+<li class="count-card sev-high is-zero"><span class="count">0</span> <span class="count-label">High</span></li>
+<li class="count-card sev-medium"><span class="count">1</span> <span class="count-label">Medium</span></li>
+<li class="count-card sev-low"><span class="count">1</span> <span class="count-label">Low</span></li>
+<li class="count-card sev-info is-zero"><span class="count">0</span> <span class="count-label">Info</span></li>
+</ul>
+<p class="summary">1 of 1 host was up, with 2 open ports. 2 findings were identified (1 Medium and 1 Low). The most severe finding is Outdated OpenSSH version (Medium) on 45.33.32.156 (scanme.nmap.org), port 22/tcp.</p>
+</section>
+
+<section id="hosts" aria-labelledby="hosts-title">
+<h2 id="hosts-title">2. Hosts and open ports</h2>
+<article class="host">
+<h3><span class="mono">45.33.32.156</span> <span class="hostnames">scanme.nmap.org</span></h3>
+<div class="table-wrap">
+<table>
+<caption class="visually-hidden">Open ports on 45.33.32.156 (scanme.nmap.org)</caption>
+<thead><tr><th scope="col">Port</th><th scope="col">Service</th><th scope="col">Version</th><th scope="col">Detection</th></tr></thead>
+<tbody>
+<tr><td class="mono nowrap">22/tcp</td><td>ssh</td><td class="mono version">OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13 (Ubuntu Linux; protocol 2.0)</td><td>Probed</td></tr>
+<tr><td class="mono nowrap">80/tcp</td><td>http</td><td class="mono version">Apache httpd 2.4.7 ((Ubuntu))</td><td>Probed</td></tr>
+</tbody>
+</table>
+</div>
+</article>
+</section>
+
+<section id="findings" aria-labelledby="findings-title">
+<h2 id="findings-title">3. Findings</h2>
+<p>Findings are sorted by severity, most severe first.</p>
+<article class="finding sev-medium" id="finding-1">
+<div class="finding-head">
+<span class="badge">Medium</span>
+<h3>1. Outdated OpenSSH version</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">45.33.32.156</span> (scanme.nmap.org)</dd></div>
+<div><dt>Port</dt><dd class="mono">22/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Potential: based on the banner version, which may not reflect patch status</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-VER-OPENSSH-OUTDATED</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>ssh: OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13 (Ubuntu Linux; protocol 2.0)</code></pre>
+<h4>Description</h4>
+<p>The banner reports an OpenSSH release older than 7.4 (December 2016), the release that removed server support for the obsolete SSH-1 protocol. Such old releases lack years of upstream security fixes. OpenSSH does not publish an end-of-life schedule, so only clearly outdated releases are flagged. Linux distributions often backport security fixes without changing the upstream version number, so the banner version may not reflect the actual patch status. Verify against the vendor&#39;s package version before acting.</p>
+<h4>Recommendation</h4>
+<p>Upgrade OpenSSH through a supported operating system release or to a current upstream version, and disable legacy key exchange algorithms and ciphers.</p>
+<h4>References</h4>
+<ul class="references">
+<li><a href="https://www.openssh.org/txt/release-7.4" rel="noopener noreferrer">https://www.openssh.org/txt/release-7.4</a></li>
+<li><a href="https://www.openssh.org/security.html" rel="noopener noreferrer">https://www.openssh.org/security.html</a></li>
+</ul>
+</article>
+<article class="finding sev-low" id="finding-2">
+<div class="finding-head">
+<span class="badge">Low</span>
+<h3>2. Unencrypted HTTP service</h3>
+</div>
+<dl class="finding-meta">
+<div><dt>Host</dt><dd><span class="mono">45.33.32.156</span> (scanme.nmap.org)</dd></div>
+<div><dt>Port</dt><dd class="mono">80/tcp</dd></div>
+<div><dt>Confidence</dt><dd>Confirmed: nmap identified the service by probing it</dd></div>
+<div><dt>Rule</dt><dd class="mono">RR-CLEARTEXT-HTTP</dd></div>
+</dl>
+<h4>Evidence</h4>
+<pre class="evidence"><code>http: Apache httpd 2.4.7 ((Ubuntu))</code></pre>
+<h4>Description</h4>
+<p>The service is served over plain HTTP, so traffic, including any credentials or session cookies, can be read or modified in transit. This is expected if the port only redirects to HTTPS.</p>
+<h4>Recommendation</h4>
+<p>Serve the site over HTTPS, redirect HTTP to HTTPS, and enable HTTP Strict Transport Security (HSTS) once HTTPS is in place.</p>
+</article>
+</section>
+
+<section id="methodology" class="methodology" aria-labelledby="methodology-title">
+<h2 id="methodology-title">4. Methodology and limitations</h2>
+<h3>How the scan was run</h3>
+<p>Hosts and services were discovered with Nmap using the command shown in the report header. Nmap service version detection (-sV) probed each open port and identified the product and version from the service&#39;s responses.</p>
+<p>Each open port on each host that was up was then assessed against recon-report's built-in rules: 15 service exposure rules (cleartext protocols, remote administration, databases and management APIs) and 7 version rules (outdated, end-of-life or known-vulnerable releases). No exploitation, authentication attempts or vulnerability probing were performed.</p>
+<h3>Confidence levels</h3>
+<ul>
+<li><strong>Confirmed:</strong> nmap identified the service by probing it.</li>
+<li><strong>Likely:</strong> nmap guessed the service from the port number only.</li>
+<li><strong>Potential:</strong> based on the banner version, which may not reflect patch status.</li>
+</ul>
+<h3>Limitations</h3>
+<ul>
+<li>Version findings are based only on the version reported in the service banner. Linux distributions often backport security fixes without changing the upstream version number, so the banner version may not reflect the actual patch status. Verify against the vendor&#39;s package version before acting.</li>
+<li>Version rule thresholds were last reviewed against official vendor lifecycle and advisory pages on 2026-11-03. Releases and end-of-life dates after that are not reflected.</li>
+<li>The scan shows only what was reachable from the scanning host at the time of the scan. Filtered ports, ports and protocols that were not scanned, and changes made after the scan are not covered.</li>
+<li>Findings indicate exposure and likely risk, not confirmed vulnerabilities. The absence of findings does not mean a host is secure.</li>
+</ul>
+</section>
+
+</main>
+<footer class="report-footer">
+<p>Generated by recon-report 0.1.0 on 2026-11-02 18:09:24 UTC.</p>
+</footer>
+</body>
+</html>

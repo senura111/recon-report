@@ -6,14 +6,15 @@ import ipaddress
 import re
 import shutil
 import subprocess
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
+
+from recon_report import filenames
 
 DEFAULT_TIMEOUT_SECONDS = 600
 
 _HOSTNAME_LABEL = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
 _PORT_ITEM = re.compile(r"^(\d{1,5})(?:-(\d{1,5}))?$")
-_UNSAFE_FILENAME_CHARS = re.compile(r"[^A-Za-z0-9._-]")
 
 
 class ScanError(Exception):
@@ -111,9 +112,7 @@ def find_nmap() -> str:
 
 def build_output_path(output_dir: Path, target: str, now: datetime | None = None) -> Path:
     """Return a timestamped XML output path for ``target`` inside ``output_dir``."""
-    timestamp = (now or datetime.now(timezone.utc)).strftime("%Y%m%dT%H%M%SZ")
-    safe_target = _UNSAFE_FILENAME_CHARS.sub("_", target)
-    return output_dir / f"scan_{safe_target}_{timestamp}.xml"
+    return output_dir / f"scan_{filenames.safe_part(target)}_{filenames.timestamp(now)}.xml"
 
 
 def run_scan(

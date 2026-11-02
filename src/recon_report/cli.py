@@ -10,7 +10,8 @@ from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
-from recon_report import __version__, parser, risk, scanner
+from recon_report import __version__, parser, report, risk, scanner
+from recon_report.report import ReportFormat
 
 FAIL_ON_EXIT_CODE = 3
 """Exit code of ``findings`` when a finding is at or above the ``--fail-on`` severity."""
@@ -63,6 +64,14 @@ def scan(
         float,
         typer.Option("--timeout", "-t", help="Maximum scan duration in seconds."),
     ] = scanner.DEFAULT_TIMEOUT_SECONDS,
+    report_format: Annotated[
+        ReportFormat | None,
+        typer.Option("--report", help="Also write a report after scanning: html, md or both."),
+    ] = None,
+    report_dir: Annotated[
+        Path,
+        typer.Option("--report-dir", help="Directory to write reports in (with --report)."),
+    ] = Path("reports"),
 ) -> None:
     """Run an Nmap service version scan (-sV), save the XML output and print a summary."""
     typer.echo(f"Scanning {target} ...")
@@ -75,7 +84,10 @@ def scan(
         typer.echo(f"Error: {exc}", err=True)
         raise typer.Exit(code=1) from exc
     typer.echo(f"Scan complete. XML saved to {xml_path}")
-    _print_summary(_load(xml_path))
+    result = _load(xml_path)
+    _print_summary(result)
+    if report_format is not None:
+        _write_reports(result, report_format, report_dir)
 
 
 @app.command("parse")
@@ -130,6 +142,37 @@ def findings_command(
                 f"Failing: {len(failing)} finding(s) at or above {threshold.label}.", err=True
             )
             raise typer.Exit(code=FAIL_ON_EXIT_CODE)
+
+
+@app.command("report")
+def report_command(
+    xml_file: Annotated[
+        Path,
+        typer.Argument(
+            help="Nmap XML file to report on.", exists=True, dir_okay=False, readable=True
+        ),
+    ],
+    report_format: Annotated[
+        ReportFormat,
+        typer.Option("--format", "-f", help="Report format: html, md or both."),
+    ] = ReportFormat.HTML,
+    output: Annotated[
+        Path,
+        typer.Option("--output", "-o", help="Directory to write reports in."),
+    ] = Path("reports"),
+) -> None:
+    """Write an HTML and/or Markdown findings report for an Nmap XML file."""
+    _write_reports(_load(xml_file), report_format, output)
+
+
+def _write_reports(result: parser.ScanResult, fmt: ReportFormat, output_dir: Path) -> None:
+    try:
+        paths = report.write_reports(result, risk.assess(result), output_dir, fmt)
+    except report.ReportError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    for path in paths:
+        typer.echo(f"Report written to {path}")
 
 
 def _load(xml_path: Path) -> parser.ScanResult:

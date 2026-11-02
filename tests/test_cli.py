@@ -285,3 +285,126 @@ def test_findings_does_not_render_markup_from_xml(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     assert "[bold]evil[/bold]" in result.output
     assert "[red]host[/red]" in result.output
+
+
+# --- report ---------------------------------------------------------------------
+
+_REPORT_LINE = re.compile(r"^Report written to (.+)$", re.MULTILINE)
+
+
+def _written(output: str) -> list[Path]:
+    return [Path(path) for path in _REPORT_LINE.findall(output)]
+
+
+def test_report_help_lists_options() -> None:
+    result = runner.invoke(app, ["report", "--help"])
+    assert result.exit_code == 0
+    for option in ("--format", "--output", "html", "md", "both"):
+        assert option in result.output
+
+
+def test_report_defaults_to_html_in_reports_dir(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["report", str(FIXTURES / "single_host.xml")])
+
+    assert result.exit_code == 0, result.output
+    [path] = _written(result.output)
+    assert path.parent == Path("reports")
+    assert re.fullmatch(r"report_scanme\.nmap\.org_\d{8}T\d{6}Z\.html", path.name)
+    assert "Outdated OpenSSH version" in (tmp_path / path).read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    ("fmt", "suffixes"), [("html", [".html"]), ("md", [".md"]), ("both", [".html", ".md"])]
+)
+def test_report_formats(fmt: str, suffixes: list[str], tmp_path: Path) -> None:
+    xml = str(FIXTURES / "risky_host.xml")
+    result = runner.invoke(app, ["report", xml, "--format", fmt, "--output", str(tmp_path)])
+
+    assert result.exit_code == 0, result.output
+    paths = _written(result.output)
+    assert [path.suffix for path in paths] == suffixes
+    assert sorted(tmp_path.iterdir()) == sorted(paths)
+    for path in paths:
+        assert path.name.startswith("report_3-hosts_")
+        assert "Docker Engine API exposed without TLS" in path.read_text(encoding="utf-8")
+
+
+def test_report_without_findings(tmp_path: Path) -> None:
+    result = runner.invoke(
+        app, ["report", str(FIXTURES / "minimal.xml"), "-f", "md", "-o", str(tmp_path)]
+    )
+    assert result.exit_code == 0, result.output
+    [path] = _written(result.output)
+    assert path.name.startswith("report_no-hosts_")
+    assert "No findings." in path.read_text(encoding="utf-8")
+
+
+def test_report_invalid_format_exits_2(tmp_path: Path) -> None:
+    result = runner.invoke(
+        app, ["report", str(FIXTURES / "single_host.xml"), "--format", "pdf", "-o", str(tmp_path)]
+    )
+    assert result.exit_code == 2
+    assert not list(tmp_path.iterdir())
+
+
+def test_report_bad_file_exits_1(tmp_path: Path) -> None:
+    result = runner.invoke(app, ["report", str(FIXTURES / "malformed.xml"), "-o", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "not well-formed XML" in result.output
+    assert not list(tmp_path.iterdir())
+
+
+def test_report_unwritable_output_exits_1(tmp_path: Path) -> None:
+    blocker = tmp_path / "file"
+    blocker.write_text("not a directory", encoding="utf-8")
+    result = runner.invoke(
+        app, ["report", str(FIXTURES / "single_host.xml"), "-o", str(blocker / "reports")]
+    )
+    assert result.exit_code == 1
+    assert "Cannot write report" in result.output
+
+
+def test_scan_help_lists_report_options() -> None:
+    result = runner.invoke(app, ["scan", "--help"])
+    assert result.exit_code == 0
+    for option in ("--report", "--report-dir"):
+        assert option in result.output
+
+
+def test_scan_writes_report(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(scanner, "run_scan", _fake_run_scan("single_host.xml"))
+    report_dir = tmp_path / "out"
+    result = runner.invoke(
+        app,
+        [
+            "scan",
+            "scanme.nmap.org",
+            "--output",
+            str(tmp_path / "scans"),
+            "--report",
+            "both",
+            "--report-dir",
+            str(report_dir),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    paths = _written(result.output)
+    assert [path.suffix for path in paths] == [".html", ".md"]
+    assert all(path.parent == report_dir and path.is_file() for path in paths)
+    # The report is written after the scan summary.
+    assert result.output.index("Hosts and open ports") < result.output.index("Report written")
+
+
+def test_scan_without_report_option_writes_no_report(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(scanner, "run_scan", _fake_run_scan("single_host.xml"))
+    result = runner.invoke(app, ["scan", "scanme.nmap.org", "--output", str(tmp_path / "scans")])
+    assert result.exit_code == 0, result.output
+    assert "Report written" not in result.output
+    assert not (tmp_path / "reports").exists()
