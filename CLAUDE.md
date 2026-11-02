@@ -36,7 +36,13 @@ Out of scope: exploitation, payloads, evasion, or stealth features.
 
 \- parser: converts nmap XML into dataclasses
 
-\- risk: severity rules for services and versions
+\- risk/ (package): severity rules for services and versions
+
+  \- risk/models.py: Severity (orderable), Confidence, Finding, ServiceRule, VersionRule
+
+  \- risk/rules.py: rule definitions only (SERVICE_RULES, VERSION_RULES); add rules here. Every VersionRule has a last_reviewed date; recheck thresholds against official lifecycle pages
+
+  \- risk/engine.py: assess() evaluates a ScanResult and returns sorted findings and severity counts; version parsing and comparison
 
 \- report: renders HTML and Markdown reports
 

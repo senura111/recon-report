@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 from pathlib import Path
 
@@ -188,3 +189,99 @@ def test_parse_bad_file_exits_1(fixture: str, message: str) -> None:
 def test_parse_missing_file_exits_2(tmp_path: Path) -> None:
     result = runner.invoke(app, ["parse", str(tmp_path / "nope.xml")])
     assert result.exit_code == 2
+
+
+# --- findings -------------------------------------------------------------------
+
+
+def test_findings_help_lists_fail_on() -> None:
+    result = runner.invoke(app, ["findings", "--help"])
+    assert result.exit_code == 0
+    assert "--fail-on" in result.output
+
+
+def test_findings_real_scanme_scan() -> None:
+    result = runner.invoke(app, ["findings", str(FIXTURES / "single_host.xml")])
+    assert result.exit_code == 0, result.output
+    assert "Findings: 0 Critical, 0 High, 1 Medium, 1 Low, 0 Info (2 total)" in result.output
+    assert "RR-VER-OPENSSH-OUTDATED" in result.output
+    assert "RR-CLEARTEXT-HTTP" in result.output
+    assert "scanme.nmap.org" in result.output
+    assert result.output.index("RR-VER-OPENSSH-OUTDATED") < result.output.index("RR-CLEARTEXT-HTTP")
+
+
+def test_findings_table_sorted_by_severity() -> None:
+    result = runner.invoke(app, ["findings", str(FIXTURES / "risky_host.xml")])
+    assert result.exit_code == 0, result.output
+    summary, table = result.output.split("\n", 1)
+    assert summary == "Findings: 1 Critical, 6 High, 2 Medium, 1 Low, 0 Info (10 total)"
+    # The first cell of each finding row is its severity; read them in table order.
+    row_severities = re.findall(r"^\W (Critical|High|Medium|Low|Info) ", table, re.MULTILINE)
+    assert row_severities == ["Critical"] + ["High"] * 6 + ["Medium"] * 2 + ["Low"]
+
+
+def test_findings_without_findings() -> None:
+    result = runner.invoke(app, ["findings", str(FIXTURES / "minimal.xml"), "--fail-on", "info"])
+    assert result.exit_code == 0, result.output
+    assert "(0 total)" in result.output
+    assert "No findings." in result.output
+
+
+@pytest.mark.parametrize(
+    ("threshold", "exit_code"),
+    [
+        ("critical", 0),
+        ("high", 0),
+        ("medium", 3),
+        ("Medium", 3),
+        ("LOW", 3),
+        ("info", 3),
+    ],
+)
+def test_findings_fail_on(threshold: str, exit_code: int) -> None:
+    result = runner.invoke(
+        app, ["findings", str(FIXTURES / "single_host.xml"), "--fail-on", threshold]
+    )
+    assert result.exit_code == exit_code, result.output
+    # The findings are printed whether or not the threshold is met.
+    assert "RR-VER-OPENSSH-OUTDATED" in result.output
+    if exit_code == 3:
+        assert "at or above" in result.output
+
+
+def test_findings_fail_on_critical_finding() -> None:
+    result = runner.invoke(
+        app, ["findings", str(FIXTURES / "risky_host.xml"), "--fail-on", "critical"]
+    )
+    assert result.exit_code == 3
+    assert "Failing: 1 finding(s) at or above Critical." in result.output
+
+
+def test_findings_invalid_fail_on_exits_2() -> None:
+    result = runner.invoke(
+        app, ["findings", str(FIXTURES / "single_host.xml"), "--fail-on", "severe"]
+    )
+    assert result.exit_code == 2
+    assert "Unknown severity" in result.output
+
+
+def test_findings_bad_file_exits_1() -> None:
+    result = runner.invoke(app, ["findings", str(FIXTURES / "malformed.xml")])
+    assert result.exit_code == 1
+    assert "not well-formed XML" in result.output
+
+
+def test_findings_does_not_render_markup_from_xml(tmp_path: Path) -> None:
+    xml = tmp_path / "markup.xml"
+    xml.write_text(
+        '<nmaprun><host><status state="up"/><address addr="10.0.0.5" addrtype="ipv4"/>'
+        '<hostnames><hostname name="[red]host[/red]"/></hostnames><ports>'
+        '<port protocol="tcp" portid="23"><state state="open"/>'
+        '<service name="telnet" product="[bold]evil[/bold]"/></port>'
+        "</ports></host></nmaprun>",
+        encoding="utf-8",
+    )
+    result = runner.invoke(app, ["findings", str(xml)])
+    assert result.exit_code == 0, result.output
+    assert "[bold]evil[/bold]" in result.output
+    assert "[red]host[/red]" in result.output

@@ -28,7 +28,13 @@ class ParseError(Exception):
 
 @dataclass(frozen=True, slots=True)
 class Port:
-    """A single port reported for a host."""
+    """A single port reported for a host.
+
+    ``tunnel`` is ``"ssl"`` when nmap detected the service inside TLS (e.g. HTTPS
+    is reported as ``http`` with an ``ssl`` tunnel). ``method`` is ``"probed"``
+    when nmap identified the service by probing it, or ``"table"`` when it only
+    guessed from the port number.
+    """
 
     port: int
     protocol: str
@@ -39,6 +45,16 @@ class Port:
     version: str | None = None
     extra_info: str | None = None
     cpes: tuple[str, ...] = ()
+    tunnel: str | None = None
+    method: str | None = None
+
+    @property
+    def banner(self) -> str:
+        """Product, version and extra info formatted the way nmap's own output does."""
+        text = " ".join(value for value in (self.product, self.version) if value)
+        if self.extra_info:
+            text = f"{text} ({self.extra_info})" if text else f"({self.extra_info})"
+        return text
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,6 +184,8 @@ def _parse_port(element: Element) -> Port:
             "product": _text_attr(service, "product"),
             "version": _text_attr(service, "version"),
             "extra_info": _text_attr(service, "extrainfo"),
+            "tunnel": _text_attr(service, "tunnel"),
+            "method": _text_attr(service, "method"),
         }
         cpes = tuple(cpe.text.strip() for cpe in service.findall("cpe") if (cpe.text or "").strip())
 

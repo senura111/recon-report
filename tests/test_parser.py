@@ -73,6 +73,7 @@ def test_single_host_ports_are_fully_populated() -> None:
             version="6.6.1p1 Ubuntu 2ubuntu2.13",
             extra_info="Ubuntu Linux; protocol 2.0",
             cpes=("cpe:/a:openbsd:openssh:6.6.1p1", "cpe:/o:linux:linux_kernel"),
+            method="probed",
         ),
         Port(
             port=80,
@@ -84,6 +85,7 @@ def test_single_host_ports_are_fully_populated() -> None:
             version="2.4.7",
             extra_info="(Ubuntu)",
             cpes=("cpe:/a:apache:http_server:2.4.7",),
+            method="probed",
         ),
     )
     assert host.open_ports == host.ports
@@ -283,3 +285,38 @@ def test_empty_input_raises_parse_error() -> None:
 def test_invalid_values_raise_parse_error(xml: str, message: str) -> None:
     with pytest.raises(ParseError, match=message):
         parse_string(xml)
+
+
+# --- TLS tunnel, detection method and banner ------------------------------------
+
+
+def test_port_records_tls_tunnel_and_detection_method() -> None:
+    port = _only_port(
+        '<port protocol="tcp" portid="443"><state state="open"/>'
+        '<service name="http" product="nginx" tunnel="ssl" method="probed" conf="10"/></port>'
+    )
+    assert (port.service_name, port.tunnel, port.method) == ("http", "ssl", "probed")
+
+
+def test_port_detection_method_from_port_table() -> None:
+    port = _only_port(
+        '<port protocol="tcp" portid="23"><state state="open"/>'
+        '<service name="telnet" method="table" conf="3"/></port>'
+    )
+    assert (port.tunnel, port.method) == (None, "table")
+
+
+@pytest.mark.parametrize(
+    ("fields", "banner"),
+    [
+        (
+            {"product": "OpenSSH", "version": "8.9p1", "extra_info": "protocol 2.0"},
+            "OpenSSH 8.9p1 (protocol 2.0)",
+        ),
+        ({"product": "Apache httpd"}, "Apache httpd"),
+        ({"extra_info": "Ubuntu"}, "(Ubuntu)"),
+        ({}, ""),
+    ],
+)
+def test_port_banner(fields: dict[str, str], banner: str) -> None:
+    assert Port(port=1, protocol="tcp", state="open", **fields).banner == banner

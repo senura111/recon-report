@@ -10,7 +10,18 @@ from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
-from recon_report import __version__, parser, scanner
+from recon_report import __version__, parser, risk, scanner
+
+FAIL_ON_EXIT_CODE = 3
+"""Exit code of ``findings`` when a finding is at or above the ``--fail-on`` severity."""
+
+_SEVERITY_STYLES = {
+    risk.Severity.CRITICAL: "bold white on red",
+    risk.Severity.HIGH: "bold red",
+    risk.Severity.MEDIUM: "yellow",
+    risk.Severity.LOW: "cyan",
+    risk.Severity.INFO: "dim",
+}
 
 app = typer.Typer(
     help="Defensive reconnaissance and reporting for authorized penetration testing.",
@@ -80,6 +91,47 @@ def parse_command(
     _print_summary(_load(xml_file))
 
 
+def _parse_severity(value: str | None) -> risk.Severity | None:
+    if value is None:
+        return None
+    try:
+        return risk.Severity.parse(value)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
+@app.command("findings")
+def findings_command(
+    xml_file: Annotated[
+        Path,
+        typer.Argument(help="Nmap XML file to assess.", exists=True, dir_okay=False, readable=True),
+    ],
+    fail_on: Annotated[
+        str | None,
+        typer.Option(
+            "--fail-on",
+            metavar="SEVERITY",
+            help=(
+                "Exit with code 3 if any finding is at or above this severity "
+                "(critical, high, medium, low, info)."
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Rate the services in an Nmap XML file and print findings, most severe first."""
+    threshold = _parse_severity(fail_on)
+    assessment = risk.assess(_load(xml_file))
+    _print_findings(assessment)
+
+    if threshold is not None:
+        failing = assessment.at_or_above(threshold)
+        if failing:
+            typer.echo(
+                f"Failing: {len(failing)} finding(s) at or above {threshold.label}.", err=True
+            )
+            raise typer.Exit(code=FAIL_ON_EXIT_CODE)
+
+
 def _load(xml_path: Path) -> parser.ScanResult:
     try:
         return parser.parse_file(xml_path)
@@ -118,7 +170,7 @@ def _print_summary(result: parser.ScanResult) -> None:
                 Text(f"{port.port}/{port.protocol}"),
                 Text(port.state, style="green"),
                 Text(port.service_name or "unknown"),
-                Text(_version_string(port)),
+                Text(port.banner),
             )
             label = Text("")
 
@@ -135,9 +187,33 @@ def _summary_header(result: parser.ScanResult) -> str:
     return ", ".join(parts)
 
 
-def _version_string(port: parser.Port) -> str:
-    """Format product, version and extra info the way nmap's own output does."""
-    text = " ".join(value for value in (port.product, port.version) if value)
-    if port.extra_info:
-        text = f"{text} ({port.extra_info})" if text else f"({port.extra_info})"
-    return text
+def _print_findings(assessment: risk.Assessment) -> None:
+    """Print a per-severity summary line and a table of findings."""
+    console = Console()
+    console.print(Text(_findings_summary(assessment)))
+    if not assessment.findings:
+        console.print("No findings.")
+        return
+
+    # Three stacked columns so the table stays readable in an 80-column terminal.
+    table = Table(title="Findings", title_justify="left", show_lines=True)
+    table.add_column("Severity", no_wrap=True)
+    table.add_column("Host")
+    table.add_column("Finding", ratio=1)
+    for finding in assessment.findings:
+        # Evidence and hostnames come from untrusted XML, so wrap them in Text.
+        severity = Text(finding.severity.label, style=_SEVERITY_STYLES[finding.severity])
+        severity.append(f"\n{finding.confidence}", style="dim")
+        host = Text(f"{finding.host}\n{finding.port}/{finding.protocol}")
+        if finding.hostname:
+            host.append(f"\n{finding.hostname}", style="dim")
+        detail = Text(finding.title)
+        detail.append(f"\n{finding.rule_id}", style="dim")
+        detail.append(f"\n{finding.evidence}", style="dim")
+        table.add_row(severity, host, detail)
+    console.print(table)
+
+
+def _findings_summary(assessment: risk.Assessment) -> str:
+    counts = ", ".join(f"{count} {severity.label}" for severity, count in assessment.counts.items())
+    return f"Findings: {counts} ({len(assessment.findings)} total)"
