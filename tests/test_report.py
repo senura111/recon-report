@@ -343,37 +343,162 @@ def test_html_report_shows_notice(scanme: ScanResult) -> None:
 def test_html_report_is_self_contained(fixture: str) -> None:
     page = report.render_html(parse_file(FIXTURES / fixture))
     lowered = page.lower()
-    for forbidden in ("<script", "<link", "<img", "<iframe", " src=", "@import", "url("):
+    for forbidden in ("<link", "<img", "<iframe", " src=", "@import", "url(", "javascript:"):
         assert forbidden not in lowered
+    # Exactly one script: the inline "Save as PDF" handler, without attributes.
+    assert lowered.count("<script") == 1
+    assert page.count("<script>") == 1
     # The only URLs are rule references, shown as links.
     assert set(re.findall(r"https?://[^\s\"<>]+", page)) <= RULE_REFERENCES
     collector = _HTMLCollector(page)
     hrefs = {value for name, value in collector.attrs if name == "href"}
     assert hrefs <= RULE_REFERENCES
     assert not [name for name, _ in collector.attrs if name in ("style", "src", "srcset")]
+    # Inline event handlers would need 'unsafe-inline'; the script uses addEventListener.
+    assert not [name for name, _ in collector.attrs if name.startswith("on")]
 
 
-def test_html_report_csp_allows_only_the_inline_stylesheet(scanme: ScanResult) -> None:
+def _sha256_source(text: str) -> str:
+    return "'sha256-" + base64.b64encode(hashlib.sha256(text.encode()).digest()).decode() + "'"
+
+
+def test_html_report_csp_allows_only_the_inline_stylesheet_and_script(scanme: ScanResult) -> None:
     page = report.render_html(scanme)
     csp_match = re.search(r'<meta http-equiv="Content-Security-Policy" content="([^"]+)">', page)
     style_match = re.search(r"<style>(.*?)</style>", page, re.DOTALL)
-    assert csp_match and style_match
+    script_match = re.search(r"<script>(.*?)</script>", page, re.DOTALL)
+    assert csp_match and style_match and script_match
     # The policy must be declared before the content it protects.
-    assert csp_match.start() < style_match.start()
+    assert csp_match.start() < style_match.start() < script_match.start()
     csp = html.unescape(csp_match.group(1))
-    digest = base64.b64encode(hashlib.sha256(style_match.group(1).encode()).digest()).decode()
     assert csp == (
-        f"default-src 'none'; style-src 'sha256-{digest}'; base-uri 'none'; form-action 'none'"
+        f"default-src 'none'; script-src {_sha256_source(script_match.group(1))}; "
+        f"style-src {_sha256_source(style_match.group(1))}; base-uri 'none'; form-action 'none'"
     )
     assert "unsafe" not in csp
     assert page.count("<style>") == 1
+
+
+def test_html_report_save_as_pdf_button(scanme: ScanResult) -> None:
+    page = report.render_html(scanme)
+    script = re.search(r"<script>(.*?)</script>", page, re.DOTALL)
+    assert script
+    # The script reveals the button and prints on click; without JavaScript the button
+    # stays hidden and the <noscript> hint explains how to print.
+    button = '<button type="button" class="save-pdf" id="save-pdf" hidden>Save as PDF</button>'
+    assert button in page
+    assert 'getElementById("save-pdf")' in script.group(1)
+    assert 'addEventListener("click", () => window.print())' in script.group(1)
+    noscript = re.search(r'<noscript><p class="print-hint">(.*?)</p></noscript>', page)
+    assert noscript
+    hint = html.unescape(noscript.group(1))
+    assert "press Ctrl+P (Cmd+P on Mac)" in hint
+    assert "untick “Headers and footers”" in hint
+
+
+# --- Stylesheet -----------------------------------------------------------------
+
+CSS = resources.files("recon_report").joinpath("templates", "report.css").read_text("utf-8")
+SEVERITIES = ("critical", "high", "medium", "low", "info")
+# (foreground, background) colour tokens of every text the stylesheet draws.
+TEXT_PAIRS = [
+    *[(fg, bg) for fg in ("text", "muted") for bg in ("bg", "surface", "subtle")],
+    ("accent", "bg"),  # section headings
+    ("accent", "surface"),  # eyebrow and links in cards
+    ("on-accent", "accent"),  # "Save as PDF" button
+    ("text", "note-bg"),
+    ("warn-text", "warn-bg"),
+    *[("on-sev", f"sev-{sev}") for sev in SEVERITIES],  # badges
+    *[(f"sev-{sev}", "surface") for sev in SEVERITIES],  # count card numbers
+]
+# Colours that only mark something need 3:1 against what they sit on (WCAG 1.4.11).
+MARKER_PAIRS = [("note-border", "note-bg"), ("warn-border", "warn-bg")]
+
+
+def _css_block(css: str, prelude: str) -> str:
+    """Return the body of the first ``prelude { ... }`` block, which may contain blocks."""
+    start = css.index(prelude + " {") + len(prelude) + 2
+    depth = 1
+    for index in range(start, len(css)):
+        depth += {"{": 1, "}": -1}.get(css[index], 0)
+        if depth == 0:
+            return css[start:index]
+    raise AssertionError(f"Unterminated block: {prelude}")
+
+
+def _colour_tokens(block: str) -> dict[str, str]:
+    return dict(re.findall(r"--([\w-]+):\s*(#[0-9a-fA-F]{6})\s*;", block))
+
+
+def _palette(media: str) -> dict[str, str]:
+    """Colour tokens in effect on screen or in print (print overrides some on :root)."""
+    tokens = _colour_tokens(_css_block(CSS, ":root"))
+    if media == "print":
+        tokens |= _colour_tokens(_css_block(_css_block(CSS, "@media print"), ":root"))
+    return tokens
+
+
+def _contrast(first: str, second: str) -> float:
+    """WCAG 2.x contrast ratio of two ``#rrggbb`` colours."""
+
+    def luminance(colour: str) -> float:
+        channels = [int(colour[i : i + 2], 16) / 255 for i in (1, 3, 5)]
+        r, g, b = (c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in channels)
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+    lighter, darker = sorted((luminance(first), luminance(second)), reverse=True)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def test_contrast_helper_matches_known_ratios() -> None:
+    assert _contrast("#000000", "#ffffff") == pytest.approx(21)
+    assert _contrast("#ffffff", "#777777") == pytest.approx(4.48, abs=0.01)
+
+
+@pytest.mark.parametrize("media", ["screen", "print"])
+@pytest.mark.parametrize(("fg", "bg"), TEXT_PAIRS)
+def test_text_colours_meet_wcag_aa(media: str, fg: str, bg: str) -> None:
+    palette = _palette(media)
+    ratio = _contrast(palette[fg], palette[bg])
+    assert ratio >= 4.5, f"{media}: --{fg} on --{bg} is {ratio:.2f}:1"
+
+
+@pytest.mark.parametrize("media", ["screen", "print"])
+@pytest.mark.parametrize(("fg", "bg"), MARKER_PAIRS)
+def test_marker_colours_meet_wcag_non_text_contrast(media: str, fg: str, bg: str) -> None:
+    palette = _palette(media)
+    ratio = _contrast(palette[fg], palette[bg])
+    assert ratio >= 3, f"{media}: --{fg} on --{bg} is {ratio:.2f}:1"
+
+
+@pytest.mark.parametrize("media", ["screen", "print"])
+def test_severity_colours_are_distinct_from_each_other_and_the_accent(media: str) -> None:
+    palette = _palette(media)
+    colours = [palette[f"sev-{sev}"] for sev in SEVERITIES]
+    assert len(set(colours)) == len(colours)
+    assert palette["accent"] not in colours
+
+
+def test_screen_theme_is_always_dark_and_print_theme_is_light() -> None:
+    assert "prefers-color-scheme" not in CSS
+    assert _contrast(_palette("screen")["bg"], "#000000") < 1.5
+    assert _palette("print")["bg"] == "#ffffff"
+    assert "color-scheme: light" in _css_block(CSS, "@media print")
+
+
+def test_print_stylesheet_hides_save_as_pdf_controls() -> None:
+    hidden: set[str] = set()
+    for selectors, body in re.findall(r"([^{}]+)\{([^{}]*)\}", _css_block(CSS, "@media print")):
+        if re.search(r"(?:^|;)\s*display:\s*none\s*(?:;|$)", body):
+            hidden.update(selector.strip() for selector in selectors.split(","))
+    assert {".save-pdf", ".print-hint"} <= hidden
 
 
 def test_html_report_renders_untrusted_scan_data_as_inert_text(evil: ScanResult) -> None:
     page = report.render_html(evil)
     collector = _HTMLCollector(page)
 
-    assert "script" not in collector.tags
+    assert collector.tags.count("script") == 1  # only the template's own
     assert "img" not in collector.tags
     assert "b" not in collector.tags
     assert not [name for name, _ in collector.attrs if name.startswith("on")]
@@ -551,7 +676,7 @@ def test_safe_part_caps_length() -> None:
 # --- Packaging and examples -----------------------------------------------------
 
 
-@pytest.mark.parametrize("name", ["report.html.j2", "report.md.j2", "report.css"])
+@pytest.mark.parametrize("name", ["report.html.j2", "report.md.j2", "report.css", "report.js"])
 def test_templates_are_package_resources(name: str) -> None:
     assert resources.files("recon_report").joinpath("templates", name).is_file()
 

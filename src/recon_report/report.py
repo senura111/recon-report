@@ -4,8 +4,9 @@ All scan data (hostnames, banners, versions, evidence, the nmap command line) is
 untrusted, so both formats escape every value by default:
 
 - HTML uses Jinja2 autoescaping. The page is a single self-contained file with
-  inline CSS, no JavaScript and no external resources, and a Content-Security-Policy
-  that allows only the inlined stylesheet (by hash) as defense in depth.
+  inline CSS, one small inline script (the "Save as PDF" button) and no external
+  resources, and a Content-Security-Policy that allows only the inlined stylesheet
+  and script (by hash) as defense in depth.
 - Markdown runs every ``{{ ... }}`` output through :func:`escape_markdown` via the
   environment's ``finalize`` hook, so a template cannot forget to escape a value.
   Only :class:`TrustedMarkdown` values, built by this module, are output as is.
@@ -215,13 +216,15 @@ def render_html(
     """Render a self-contained HTML report. See :func:`build_context` for the arguments."""
     context = build_context(result, assessment, generated_at=generated_at, notice=notice)
     css = _stylesheet()
+    js = _script()
     return (
         _html_env()
         .get_template("report.html.j2")
         .render(
             ctx=context,
             css=Markup(css),
-            csp=content_security_policy(css),
+            js=Markup(js),
+            csp=content_security_policy(css, js),
             confidence_notes=CONFIDENCE_NOTES,
         )
     )
@@ -299,10 +302,12 @@ def escape_markdown(value: object) -> str:
     return _MARKDOWN_SPECIAL.sub(r"\\\1", text)
 
 
-def content_security_policy(css: str) -> str:
-    """Return a CSP that allows only the given inline stylesheet, by SHA-256 hash."""
-    digest = base64.b64encode(hashlib.sha256(css.encode("utf-8")).digest()).decode("ascii")
-    return f"default-src 'none'; style-src 'sha256-{digest}'; base-uri 'none'; form-action 'none'"
+def content_security_policy(css: str, js: str) -> str:
+    """Return a CSP that allows only the given inline stylesheet and script, by SHA-256 hash."""
+    return (
+        f"default-src 'none'; script-src {_hash_source(js)}; style-src {_hash_source(css)}; "
+        "base-uri 'none'; form-action 'none'"
+    )
 
 
 def summary_sentence(result: ScanResult, assessment: Assessment) -> str:
@@ -472,12 +477,28 @@ def _markdown_finalize(value: object) -> str:
     return value if isinstance(value, TrustedMarkdown) else escape_markdown(value)
 
 
+def _hash_source(text: str) -> str:
+    digest = base64.b64encode(hashlib.sha256(text.encode("utf-8")).digest()).decode("ascii")
+    return f"'sha256-{digest}'"
+
+
+def _inline_asset(name: str, element: str) -> str:
+    text = resources.files("recon_report").joinpath(_TEMPLATES, name).read_text("utf-8")
+    # "<!--" switches an inline script into its escaped state, which "</" could then exploit.
+    for marker in ("</", "<!--"):
+        if marker in text:
+            raise ReportError(f"{name} must not contain {marker!r} inside the {element} element.")
+    return text
+
+
 @functools.cache
 def _stylesheet() -> str:
-    css = resources.files("recon_report").joinpath(_TEMPLATES, "report.css").read_text("utf-8")
-    if "</" in css:
-        raise ReportError("report.css must not contain '</', which could close the style element.")
-    return css
+    return _inline_asset("report.css", "style")
+
+
+@functools.cache
+def _script() -> str:
+    return _inline_asset("report.js", "script")
 
 
 @functools.cache

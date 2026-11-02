@@ -100,10 +100,12 @@ Scan data (hostnames, banners, versions) comes from the network and is treated
 as untrusted:
 
 - **HTML** reports escape every value (Jinja2 autoescaping) and are a single
-  self-contained file: inline CSS, no JavaScript, and no external fonts,
-  images or requests. A Content-Security-Policy that allows only the inline
-  stylesheet, by hash, is included as defense in depth. Reports support dark
-  mode and print cleanly to PDF from the browser.
+  self-contained file: inline CSS, no external fonts, images or requests, and
+  a single small inline script for the "Save as PDF" button (no inline event
+  handlers). A Content-Security-Policy that allows only the inline stylesheet
+  and that script, by hash, is included as defense in depth; it never allows
+  `'unsafe-inline'`. Reports use a dark theme on screen and print in a clean
+  light layout, so "Save as PDF" (or Ctrl+P) gives an ink-friendly PDF.
 - **Markdown** reports backslash-escape all ASCII punctuation in values and
   put each value on one line, so scan data cannot break tables or inject
   formatting, links or HTML.

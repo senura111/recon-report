@@ -2,66 +2,47 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;sha256-DXP6MhevRDz8Dhf+iFIzrWgMi08FsVygZ7uxfeqR2tk=&#39;; base-uri &#39;none&#39;; form-action &#39;none&#39;">
+<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; script-src &#39;sha256-NBhxNBDsXuO5CsjjZa/9HgEIsD6xH20i36ZnxQoJkMQ=&#39;; style-src &#39;sha256-JlO/eLNI6NIwWomg8ySMLS+W80wvdJ2799ZAvtfzW7Q=&#39;; base-uri &#39;none&#39;; form-action &#39;none&#39;">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="dark">
 <meta name="generator" content="recon-report 0.1.0">
 <title>Reconnaissance report: 3 hosts</title>
 <style>/* recon-report HTML report. Inlined into the page and allowed by its CSP hash.
    No external fonts, images or imports: the report must stay self-contained.
-   Severity colours meet WCAG AA contrast (4.5:1) against their badge text. */
+   The screen theme is always dark; print switches to a light palette to save ink.
+   tests/test_report.py checks every text/background pair meets WCAG AA (4.5:1)
+   in both palettes, so keep colours as #rrggbb tokens on :root. */
 :root {
-  color-scheme: light;
-  --bg: #f5f6f8;
-  --surface: #ffffff;
-  --text: #1f2933;
-  --muted: #52606d;
-  --border: #d9dee4;
-  --subtle: #eef1f4;
-  --accent: #1f3a5f;
-  --note-bg: #eaf2fb;
-  --note-border: #3d6ea8;
-  --warn-bg: #fff8e1;
-  --warn-border: #c99400;
-  --warn-text: #5c4400;
-  --on-sev: #ffffff;
-  --sev-critical: #6a1b9a;
-  --sev-high: #c62828;
-  --sev-medium: #8f6200;
-  --sev-low: #1d4ed8;
-  --sev-info: #4b5563;
+  color-scheme: dark;
+  --bg: #0f1215;
+  --surface: #171b20;
+  --subtle: #1f252c;
+  --text: #e3e7eb;
+  --muted: #9aa5b1;
+  --border: #2c333b;
+  --accent: #2dd4bf;
+  --on-accent: #06201d;
+  --note-bg: #10282a;
+  --note-border: #2dd4bf;
+  --warn-bg: #2a2310;
+  --warn-border: #d4a017;
+  --warn-text: #f3d58b;
+  --on-sev: #0b0d10;
+  --sev-critical: #e879f9;
+  --sev-high: #f87171;
+  --sev-medium: #fbbf24;
+  --sev-low: #60a5fa;
+  --sev-info: #aab4bf;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-}
-
-@media screen and (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg: #0f1419;
-    --surface: #18202a;
-    --text: #e6e9ed;
-    --muted: #a3adb8;
-    --border: #2e3a46;
-    --subtle: #1f2934;
-    --accent: #9cc3f0;
-    --note-bg: #16283d;
-    --note-border: #6f9fd8;
-    --warn-bg: #2a2410;
-    --warn-border: #c99400;
-    --warn-text: #ffe08a;
-    --on-sev: #111418;
-    --sev-critical: #d6a3f5;
-    --sev-high: #ff8a80;
-    --sev-medium: #ffb74d;
-    --sev-low: #8ab4f8;
-    --sev-info: #b8c1cc;
-  }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }
+
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
@@ -83,7 +64,17 @@ h2 {
   color: var(--accent);
   padding-bottom: 8px;
   margin: 40px 0 16px;
-  border-bottom: 2px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+h2::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 0.9em;
+  margin-right: 10px;
+  vertical-align: -0.08em;
+  border-radius: 2px;
+  background: var(--accent);
 }
 h3 { font-size: 1.1rem; margin: 24px 0 10px; overflow-wrap: anywhere; }
 h4 {
@@ -94,7 +85,7 @@ h4 {
   margin: 16px 0 4px;
 }
 p { margin: 0 0 12px; }
-a { color: var(--accent); overflow-wrap: anywhere; }
+a { color: var(--accent); overflow-wrap: anywhere; text-underline-offset: 2px; }
 code, .mono { font-family: var(--mono); font-size: 0.92em; }
 
 .visually-hidden {
@@ -110,18 +101,39 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
 .report-header {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-top: 6px solid var(--accent);
+  border-top: 4px solid var(--accent);
   border-radius: 8px;
   padding: 28px 32px;
 }
+.header-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin: 0 0 8px;
+}
 .eyebrow {
-  margin: 0 0 6px;
-  font-size: 0.8rem;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--accent);
 }
+.save-pdf {
+  padding: 7px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 600 0.88rem/1.2 var(--sans);
+  cursor: pointer;
+}
+.save-pdf:hover { filter: brightness(1.12); }
+.save-pdf:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.print-hint { margin: 0 0 8px; color: var(--muted); font-size: 0.88rem; }
 .meta {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -138,6 +150,14 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
   color: var(--muted);
 }
 .meta dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.meta code {
+  display: inline-block;
+  max-width: 100%;
+  margin-top: 2px;
+  padding: 2px 8px;
+  background: var(--subtle);
+  border-radius: 4px;
+}
 .plain { list-style: none; margin: 0; padding: 0; }
 
 .notice {
@@ -172,15 +192,17 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
 .count-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-top: 6px solid var(--sev);
+  border-top: 4px solid var(--sev);
   border-radius: 6px;
   padding: 12px 16px;
 }
 .count {
   display: block;
+  font-family: var(--mono);
   font-size: 2rem;
   font-weight: 700;
   line-height: 1.1;
+  color: var(--sev);
 }
 .count-label { font-weight: 600; color: var(--muted); }
 .count-card.is-zero .count { color: var(--muted); font-weight: 400; }
@@ -240,7 +262,7 @@ td.nowrap { white-space: nowrap; overflow-wrap: normal; }
 .finding {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 6px solid var(--sev);
+  border-left: 4px solid var(--sev);
   border-radius: 6px;
   padding: 16px 22px 10px;
   margin: 0 0 18px;
@@ -269,6 +291,7 @@ td.nowrap { white-space: nowrap; overflow-wrap: normal; }
   margin: 0;
   padding: 8px 12px;
   background: var(--subtle);
+  border-left: 2px solid var(--border);
   border-radius: 4px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -297,19 +320,40 @@ td.nowrap { white-space: nowrap; overflow-wrap: normal; }
   .report-footer { padding: 16px 14px 32px; }
 }
 
-/* Print: light colours, no page-split cards, so "Save as PDF" gives a clean report. */
+/* Print: light colours, no page-split cards and no on-screen controls, so
+   "Save as PDF" gives a clean report. */
 @page { margin: 16mm 14mm; }
 
 @media print {
-  body { background: #ffffff; font-size: 10.5pt; }
-  .report { max-width: none; padding: 0; }
-  .report-header, .host, .finding, .summary, .count-card {
-    border-color: #c4cbd3;
-    break-inside: avoid;
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --subtle: #eef1f4;
+    --text: #1f2933;
+    --muted: #52606d;
+    --border: #c4cbd3;
+    --accent: #0f766e;
+    --on-accent: #ffffff;
+    --note-bg: #e8f5f3;
+    --note-border: #0f766e;
+    --warn-bg: #fff8e1;
+    --warn-border: #a67c00;
+    --warn-text: #5c4400;
+    --on-sev: #ffffff;
+    --sev-critical: #6a1b9a;
+    --sev-high: #c62828;
+    --sev-medium: #8f6200;
+    --sev-low: #1d4ed8;
+    --sev-info: #4b5563;
   }
+  body { font-size: 10.5pt; }
+  .report { max-width: none; padding: 0; }
+  .save-pdf, .print-hint { display: none; }
+  .report-header, .host, .finding, .summary, .count-card { break-inside: avoid; }
   h2, h3, h4 { break-after: avoid; }
   tr { break-inside: avoid; }
-  .badge, .count-card, .finding, .notice {
+  .badge, .count-card, .finding, .notice, h2::before {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -322,7 +366,11 @@ td.nowrap { white-space: nowrap; overflow-wrap: normal; }
 <main class="report">
 
 <header class="report-header">
+<div class="header-top">
 <p class="eyebrow">Network reconnaissance report</p>
+<button type="button" class="save-pdf" id="save-pdf" hidden>Save as PDF</button>
+</div>
+<noscript><p class="print-hint">To save this report as a PDF, press Ctrl+P (Cmd+P on Mac) and untick &ldquo;Headers and footers&rdquo; in the print dialog.</p></noscript>
 <h1>3 hosts</h1>
 <p class="notice" role="note"><strong>Note:</strong> Fictional lab data. This example was generated from a synthetic Nmap scan: the hosts, addresses and services do not exist and were made up to demonstrate the risk rules.</p>
 <dl class="meta">
@@ -632,5 +680,12 @@ td.nowrap { white-space: nowrap; overflow-wrap: normal; }
 <footer class="report-footer">
 <p>Generated by recon-report 0.1.0 on 2026-11-02 12:01:00 UTC.</p>
 </footer>
+<script>"use strict";
+// The report's only script, allowed by its CSP hash. The button starts hidden so
+// it never shows without JavaScript; the <noscript> hint covers that case.
+const savePdf = document.getElementById("save-pdf");
+savePdf.addEventListener("click", () => window.print());
+savePdf.hidden = false;
+</script>
 </body>
 </html>
