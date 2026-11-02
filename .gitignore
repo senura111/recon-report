@@ -22,6 +22,14 @@ env/
 .coverage
 .coverage.*
 htmlcov/
+coverage.xml
+coverage.json
+
+# Local secrets and per-user tool settings
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
 
 # Scan and report output
 scans/
