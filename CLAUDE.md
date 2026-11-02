@@ -58,7 +58,7 @@ Out of scope: exploitation, payloads, evasion, or stealth features.
 
 \- Parser and risk logic must be testable without running nmap (use XML fixtures)
 
-\- Commit messages follow Conventional Commits (feat:, fix:, docs:, test:, chore:)
+\- Commit messages follow Conventional Commits (feat:, fix:, docs:, test:, ci:, chore:)
 
 
 

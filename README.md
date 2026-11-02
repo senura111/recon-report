@@ -1,5 +1,8 @@
 # recon-report
 
+[![CI](https://github.com/senura111/recon-report/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/senura111/recon-report/actions/workflows/ci.yml)
+![Python 3.10 | 3.11 | 3.12 | 3.13 | 3.14](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)
+
 Defensive reconnaissance and reporting CLI for authorized penetration testing.
 `recon-report` runs Nmap service discovery, rates the services it finds, and
 turns the results into HTML and Markdown findings reports.

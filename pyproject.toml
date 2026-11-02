@@ -42,6 +42,15 @@ packages = ["src/recon_report"]
 testpaths = ["tests"]
 addopts = "-ra"
 
+[tool.coverage.run]
+source = ["recon_report"]
+branch = true
+
+[tool.coverage.report]
+# Measured at 99.1% total (lines and branches); raise this as coverage improves.
+fail_under = 99
+show_missing = true
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"
