@@ -17,6 +17,16 @@ FIXTURES = Path(__file__).parent / "fixtures"
 # A wide terminal keeps rich from wrapping table cells mid-value.
 runner = CliRunner(env={"COLUMNS": "200"})
 
+# Typer forces rich styling when GITHUB_ACTIONS is set, so help text can contain ANSI codes.
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def _help_text(*args: str) -> str:
+    """Invoke ``args`` with ``--help`` and return the output without ANSI styling."""
+    result = runner.invoke(app, [*args, "--help"])
+    assert result.exit_code == 0, result.output
+    return _ANSI_ESCAPE.sub("", result.output)
+
 
 def _fake_run_scan(fixture: str, calls: list[dict] | None = None):
     """Return a run_scan replacement that copies ``fixture`` into the output dir."""
@@ -39,10 +49,9 @@ def test_version() -> None:
 
 
 def test_scan_help_lists_options() -> None:
-    result = runner.invoke(app, ["scan", "--help"])
-    assert result.exit_code == 0
+    output = _help_text("scan")
     for option in ("--output", "--ports", "--timeout"):
-        assert option in result.output
+        assert option in output
 
 
 # --- scan -----------------------------------------------------------------------
@@ -195,9 +204,7 @@ def test_parse_missing_file_exits_2(tmp_path: Path) -> None:
 
 
 def test_findings_help_lists_fail_on() -> None:
-    result = runner.invoke(app, ["findings", "--help"])
-    assert result.exit_code == 0
-    assert "--fail-on" in result.output
+    assert "--fail-on" in _help_text("findings")
 
 
 def test_findings_real_scanme_scan() -> None:
@@ -297,10 +304,9 @@ def _written(output: str) -> list[Path]:
 
 
 def test_report_help_lists_options() -> None:
-    result = runner.invoke(app, ["report", "--help"])
-    assert result.exit_code == 0
+    output = _help_text("report")
     for option in ("--format", "--output", "html", "md", "both"):
-        assert option in result.output
+        assert option in output
 
 
 def test_report_defaults_to_html_in_reports_dir(
@@ -368,10 +374,9 @@ def test_report_unwritable_output_exits_1(tmp_path: Path) -> None:
 
 
 def test_scan_help_lists_report_options() -> None:
-    result = runner.invoke(app, ["scan", "--help"])
-    assert result.exit_code == 0
+    output = _help_text("scan")
     for option in ("--report", "--report-dir"):
-        assert option in result.output
+        assert option in output
 
 
 def test_scan_writes_report(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
