@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "recon-report"
-version = "0.1.0"
+version = "1.0.0"
 description = "Defensive reconnaissance and reporting CLI for authorized penetration testing."
 readme = "README.md"
 license = "MIT"
