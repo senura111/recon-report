@@ -230,9 +230,13 @@ def _summary_header(result: parser.ScanResult) -> str:
     return ", ".join(parts)
 
 
-def _print_findings(assessment: risk.Assessment) -> None:
-    """Print a per-severity summary line and a table of findings."""
-    console = Console()
+def _print_findings(assessment: risk.Assessment, console: Console | None = None) -> None:
+    """Print a per-severity summary line and a table of findings.
+
+    ``console`` defaults to a new stdout console; pass a recording console to
+    capture the output (scripts/generate_screenshots.py does this).
+    """
+    console = console or Console()
     console.print(Text(_findings_summary(assessment)))
     if not assessment.findings:
         console.print("No findings.")

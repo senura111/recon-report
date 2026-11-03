@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+import importlib.util
+import io
 import re
 import shutil
 from pathlib import Path
 
 import pytest
+from rich.console import Console
 from typer.testing import CliRunner
 
 from recon_report import __version__, scanner
-from recon_report.cli import app
+from recon_report.cli import _print_findings, app
+from recon_report.parser import parse_file
+from recon_report.risk import assess
 
+ROOT = Path(__file__).parent.parent
 FIXTURES = Path(__file__).parent / "fixtures"
 
 # A wide terminal keeps rich from wrapping table cells mid-value.
@@ -225,6 +231,28 @@ def test_findings_table_sorted_by_severity() -> None:
     # The first cell of each finding row is its severity; read them in table order.
     row_severities = re.findall(r"^\W (Critical|High|Medium|Low|Info) ", table, re.MULTILINE)
     assert row_severities == ["Critical"] + ["High"] * 6 + ["Medium"] * 2 + ["Low"]
+
+
+def test_print_findings_to_supplied_console() -> None:
+    console = Console(record=True, width=100, file=io.StringIO())
+    _print_findings(assess(parse_file(FIXTURES / "single_host.xml")), console)
+    text = console.export_text()
+    assert text.startswith("Findings: 0 Critical, 0 High, 1 Medium, 1 Low, 0 Info (2 total)")
+    assert "RR-VER-OPENSSH-OUTDATED" in text
+
+
+def test_screenshot_script_renders_findings_svg() -> None:
+    spec = importlib.util.spec_from_file_location(
+        "generate_screenshots", ROOT / "scripts" / "generate_screenshots.py"
+    )
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    svg = module.render_findings_svg()
+    assert svg.startswith("<svg")
+    for expected in ("recon-report&#160;findings", "RR-VER-OPENSSH-OUTDATED", "RR-CLEARTEXT-HTTP"):
+        assert expected in svg
 
 
 def test_findings_without_findings() -> None:
