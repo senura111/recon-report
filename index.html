@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'sha256-GNwIp2dUtz5pA14xxYQjVs+Q6FTP2f9oFzmrR4+5kAs='; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="recon-report: Nmap service discovery and findings reports for authorized penetration testing.">
+<title>recon-report</title>
+<style>
+:root {
+  --bg: #0f1215;
+  --surface: #171b20;
+  --text: #e3e7eb;
+  --muted: #9aa5b1;
+  --border: #2c333b;
+  --accent: #2dd4bf;
+  --warn-bg: #2a2310;
+  --warn-border: #d4a017;
+  --warn-text: #f3d58b;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 var(--sans);
+}
+main { max-width: 760px; margin: 0 auto; padding: 56px 16px 32px; }
+.eyebrow {
+  margin: 0 0 8px;
+  font: 700 0.75rem var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+h1 { margin: 0 0 16px; font: 700 2.2rem/1.2 var(--mono); }
+h2 { margin: 40px 0 16px; font-size: 1.2rem; color: var(--accent); }
+p { margin: 0 0 16px; }
+.lead { font-size: 1.1rem; color: var(--text); }
+.muted { color: var(--muted); }
+a { color: var(--accent); text-underline-offset: 2px; }
+code { font-family: var(--mono); font-size: 0.92em; }
+.cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.card {
+  display: block;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+.card:hover, .card:focus-visible { border-color: var(--accent); }
+.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card strong { display: block; margin-bottom: 4px; color: var(--accent); font-size: 1.05rem; }
+.card span { color: var(--muted); font-size: 0.95rem; }
+.warn {
+  margin: 32px 0;
+  padding: 14px 18px;
+  border-left: 4px solid var(--warn-border);
+  border-radius: 4px;
+  background: var(--warn-bg);
+}
+.warn strong { color: var(--warn-text); }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<main>
+<p class="eyebrow">Network reconnaissance report</p>
+<h1>recon-report</h1>
+<p class="lead">A command-line tool that runs Nmap service discovery against a host you are authorized to test, rates the exposed services, and writes findings reports in HTML and Markdown.</p>
+<p class="muted">Each report has an executive summary, the open ports per host, one card per finding with evidence and a recommendation, and a methodology section. Reports are single self-contained files.</p>
+
+<h2>Sample reports</h2>
+<div class="cards">
+<a class="card" href="examples/lab-risky-host.html"><strong>lab-risky-host</strong><span>Fictional lab data from a synthetic scan: 3 hosts, 10 findings from Critical to Low.</span></a>
+<a class="card" href="examples/scanme.html"><strong>scanme.nmap.org</strong><span>A real scan of the host the Nmap Project provides for authorized test scanning.</span></a>
+</div>
+
+<p class="warn"><strong>Authorized use only.</strong> Scan only systems you own or have explicit written permission to test.</p>
+
+<footer>
+<p>Source code, installation and documentation: <a href="https://github.com/senura111/recon-report">github.com/senura111/recon-report</a></p>
+<p class="muted">MIT licensed.</p>
+</footer>
+</main>
+</body>
+</html>

@@ -681,6 +681,33 @@ def test_templates_are_package_resources(name: str) -> None:
     assert resources.files("recon_report").joinpath("templates", name).is_file()
 
 
+def test_pages_index_is_self_contained_with_hash_based_csp() -> None:
+    # read_text normalizes CRLF to LF, as HTML parsers do before CSP hashing.
+    page = (ROOT / "index.html").read_text(encoding="utf-8")
+    csp_match = re.search(r'<meta http-equiv="Content-Security-Policy" content="([^"]+)">', page)
+    style_match = re.search(r"<style>(.*?)</style>", page, re.DOTALL)
+    assert csp_match and style_match
+    assert csp_match.start() < style_match.start()
+    assert html.unescape(csp_match.group(1)) == (
+        f"default-src 'none'; style-src {_sha256_source(style_match.group(1))}; "
+        "base-uri 'none'; form-action 'none'"
+    )
+    lowered = page.lower()
+    for forbidden in ("<script", "<link", "<img", "<iframe", " src=", "@import", "url("):
+        assert forbidden not in lowered
+    collector = _HTMLCollector(page)
+    assert not [name for name, _ in collector.attrs if name == "style" or name.startswith("on")]
+    hrefs = {value for name, value in collector.attrs if name == "href"}
+    assert hrefs == {
+        "examples/lab-risky-host.html",
+        "examples/scanme.html",
+        "https://github.com/senura111/recon-report",
+    }
+    # GitHub Pages serves the repository root, so relative links must be committed files.
+    for href in hrefs - {"https://github.com/senura111/recon-report"}:
+        assert (ROOT / href).is_file()
+
+
 def test_committed_examples_are_up_to_date(monkeypatch: pytest.MonkeyPatch) -> None:
     spec = importlib.util.spec_from_file_location(
         "generate_examples", ROOT / "scripts" / "generate_examples.py"
