@@ -227,7 +227,7 @@ backport security fixes without changing the version in the banner.
 
 ## Testing and quality
 
-- **386 tests** with pytest, all using XML fixtures, so Nmap is never run. They
+- **387 tests** with pytest, all using XML fixtures, so Nmap is never run. They
   include malicious fixtures (XXE, billion laughs, markup in banners) and checks
   that the committed examples match the current templates.
 - **Coverage gate:** CI fails below 99% line and branch coverage.
